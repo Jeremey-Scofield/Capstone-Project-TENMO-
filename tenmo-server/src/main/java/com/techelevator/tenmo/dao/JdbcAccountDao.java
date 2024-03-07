@@ -27,7 +27,9 @@ public class JdbcAccountDao implements AccountDao{
     @Override
     public BigDecimal getAccountBalance(int userID) {
         Account myAccount = new Account();
-        String sql = "select balance " +
+        String sql = "select balance, " +
+                "user_id, " +
+                "account_id " +
                 "from account " +
                 "where account_id = ? and user_id;";
         try {

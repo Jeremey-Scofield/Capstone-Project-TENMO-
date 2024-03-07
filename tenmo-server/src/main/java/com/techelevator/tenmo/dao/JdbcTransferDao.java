@@ -17,6 +17,7 @@ public class JdbcTransferDao implements TransferDao {
     private JdbcTemplate jdbcTemplate;
     public JdbcTransferDao() {}
 
+    @Override
     public List<Transfer> getAllTransfers() {
         List<Transfer> allTransfers = new ArrayList<>();
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM public.transfer;";
@@ -32,7 +33,9 @@ public class JdbcTransferDao implements TransferDao {
         return allTransfers;
     }
 
-    public Transfer getTransfersById(int id){
+
+    @Override
+    public Transfer getTransferById(int id){
         Transfer transfer = null;
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM public.transfer " +
                 "WHERE transfer_id = ?;";
@@ -55,7 +58,7 @@ public class JdbcTransferDao implements TransferDao {
     }*/
 
     //Transfer receiveTEBucks(Transfer transfer);
-
+    @Override
     public Transfer createTransfer(Transfer transfer) {
       Transfer newTransfer = null;
         String sql = "INSERT INTO public.transfer( " +
@@ -65,7 +68,7 @@ public class JdbcTransferDao implements TransferDao {
             int newTransferId = jdbcTemplate.queryForObject(sql, int.class,
                     transfer.getTransfer_type_id(), transfer.getTransfer_status_id(), transfer.getAccount_from(), transfer.getAccount_to(),
                     transfer.getAmount());
-            newTransfer = getTransfersById(newTransferId);
+            newTransfer = getTransferById(newTransferId);
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         } catch (DataIntegrityViolationException e) {
@@ -74,6 +77,7 @@ public class JdbcTransferDao implements TransferDao {
         return newTransfer;
     }
 
+    @Override
     public Transfer updateTransfer(Transfer transfer) {
         Transfer updatedTransfer = null;
 
@@ -87,7 +91,7 @@ public class JdbcTransferDao implements TransferDao {
             if (rowsAffected == 0) {
                 throw new DaoException("Zero rows affected, expected at least one");
             } else {
-                updatedTransfer = getTransfersById(transfer.getTransfer_id());
+                updatedTransfer = getTransferById(transfer.getTransfer_id());
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
@@ -98,10 +102,10 @@ public class JdbcTransferDao implements TransferDao {
         return updatedTransfer;
     }
 
-    int denyTransferRequest(int transfer_id);
+   // int denyTransferRequest(int transfer_id);
 
-    int approveTransferRequest(int transfer_id);
-
+    //int approveTransferRequest(int transfer_id);
+    @Override
     public List<Transfer> pendingTransfers() {
         List<Transfer> pendingTransfers = new ArrayList<>();
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM public.transfer WHERE transfer_status_id = 1;";

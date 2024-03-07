@@ -6,6 +6,7 @@ import com.techelevator.tenmo.exception.DaoException;
 
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,19 @@ public class TransferController {
     public TransferController(AccountDao accountDao, TransferDao transferDao) {
         this.accountDao = accountDao;
         this.transferDao = transferDao;
+    }
+
+    //exclude self from list
+    public List<User> getListOfUsers(Principal principal){
+        return null;
+    }
+
+    public List<Transfer> getPendingTransfers(Principal principal){
+        try {
+            return transferDao.getPendingTransfers(loggedinUserID);
+        } catch (DaoException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @RequestMapping(path = "", method = RequestMethod.GET)
@@ -115,19 +129,26 @@ public class TransferController {
 //            3. If the transfer is approved, the requester's account balance is increased by the amount of the request.
 //            4. If the transfer is approved, the requestee's account balance is decreased by the amount of the request.
 //            5. If the transfer is rejected, no account balance changes.
-    @RequestMapping(path = "/{id}", method = RequestMethod.PUT)
-    public Transfer approveOrReject(@PathVariable int id, boolean approvalCode, boolean sendOrReceive){
+    @RequestMapping(path = "/{id}-{approvalCode}", method = RequestMethod.PUT) //-{sendOrReceive}
+    public Transfer approveOrRejectRequest(@PathVariable int id, @PathVariable boolean approvalCode){ //, @PathVariable boolean sendOrReceive
         // approvalCode: true = approve, false = deny
         // sendOrReceive: true = send, false = receive
         Transfer localTransfer = transferDao.getTransferById(id);
         Transfer returnedTransfer = null;
+        boolean sendOrReceive = false;
+
+        if (localTransfer.getTransfer_type_id() == 2){
+            sendOrReceive = true;
+        }
+
         if (approvalCode && sendOrReceive){
             returnedTransfer = sendTEBucks(localTransfer);
 
         } else if (approvalCode && !sendOrReceive){
             returnedTransfer = requestTEBucks(localTransfer);
 
-        } else {
+        }
+        else {
             localTransfer.setTransfer_status_id(3);
         }
 
@@ -135,7 +156,7 @@ public class TransferController {
     }
 
 
-
+/*
     @RequestMapping(path = "/{id}/Approve", method = RequestMethod.PUT)
     public Transfer approveTransfer(@PathVariable int id, Principal principal){
         try {
@@ -157,7 +178,7 @@ public class TransferController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+*/
 
 
 

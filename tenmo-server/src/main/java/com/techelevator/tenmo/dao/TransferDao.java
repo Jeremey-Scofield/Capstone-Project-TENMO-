@@ -19,7 +19,12 @@ public interface TransferDao {
 
     Transfer receiveTEBucks(Transfer transfer);
 
-    int denyTransferRequest(int transfer_type_id);
+    int denyTransferRequest(int transfer_id);
+
+    int approveTransferRequest(int transfer_id);
+
+    List<Transfer> pendingTransfers();
+
 
 
 }

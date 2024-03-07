@@ -49,6 +49,7 @@ yarn-error.log*
 *.njsproj
 *.sw*
 *.jfm
+.properties
 
 # Cypress e2e Testing
 cypress/screenshots

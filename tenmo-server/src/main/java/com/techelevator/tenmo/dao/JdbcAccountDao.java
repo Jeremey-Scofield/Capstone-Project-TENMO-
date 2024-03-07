@@ -16,6 +16,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class JdbcAccountDao implements AccountDao{
     private final JdbcTemplate jdbcTemplate;
 
@@ -43,7 +44,7 @@ public class JdbcAccountDao implements AccountDao{
         return myAccount.getBalance();
     }
 
-    //@Override
+    @Override
     public Account getAccountByAccountId(int accountId) {
         Account myAccount = new Account();
         String sql = "select balance, " +

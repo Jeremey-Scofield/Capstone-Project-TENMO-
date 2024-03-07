@@ -17,7 +17,9 @@ public class Transfer {
         return transfer_id;
     }
 
-
+    public void setTransfer_id(int transfer_id) {
+        this.transfer_id = transfer_id;
+    }
 
     public int getTransfer_type_id() {
         return transfer_type_id;

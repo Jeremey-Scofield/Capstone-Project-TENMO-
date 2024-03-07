@@ -2,7 +2,9 @@ package com.techelevator.tenmo.dao;
 
 
 import com.techelevator.tenmo.exception.DaoException;
+import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -45,15 +47,84 @@ public class JdbcTransferDao implements TransferDao {
         return transfer;
         }
 
+  /*  public Transfer sendTEBucks(Transfer transfer) {
+        AccountDao
+        if (transfer.getAmount() >= fromAccount.get transfer.getAccount_from()) {
 
+        }
+    }*/
+
+    //Transfer receiveTEBucks(Transfer transfer);
+
+    public Transfer createTransfer(Transfer transfer) {
+      Transfer newTransfer = null;
+        String sql = "INSERT INTO public.transfer( " +
+                "transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
+                "VALUES (?, ?, ?, ?, ?);";
+        try {
+            int newTransferId = jdbcTemplate.queryForObject(sql, int.class,
+                    transfer.getTransfer_type_id(), transfer.getTransfer_status_id(), transfer.getAccount_from(), transfer.getAccount_to(),
+                    transfer.getAmount());
+            newTransfer = getTransfersById(newTransferId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return newTransfer;
+    }
+
+    public Transfer updateTransfer(Transfer transfer) {
+        Transfer updatedTransfer = null;
+
+        String sql = "UPDATE public.transfer " +
+                "SET transfer_type_id=?, transfer_status_id=?, account_from=?, account_to=?, amount=? " +
+                "WHERE transfer_id = ?;";
+        try {
+            int rowsAffected = jdbcTemplate.update(sql, transfer.getTransfer_type_id(), transfer.getTransfer_status_id(),
+                    transfer.getAccount_from(), transfer.getAccount_to(), transfer.getAmount(), transfer.getTransfer_id());
+
+            if (rowsAffected == 0) {
+                throw new DaoException("Zero rows affected, expected at least one");
+            } else {
+                updatedTransfer = getTransfersById(transfer.getTransfer_id());
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+
+        return updatedTransfer;
+    }
+
+    int denyTransferRequest(int transfer_id);
+
+    int approveTransferRequest(int transfer_id);
+
+    public List<Transfer> pendingTransfers() {
+        List<Transfer> pendingTransfers = new ArrayList<>();
+        String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM public.transfer WHERE transfer_status_id = 1;";
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
+            while (results.next()) {
+                Transfer transfer = mapRowToTransfer(results);
+                pendingTransfers.add(transfer);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        }
+        return pendingTransfers;
+    }
 
     private Transfer mapRowToTransfer(SqlRowSet rowSet){
         Transfer transfer = new Transfer();
-        transfer.setAccount_from(rowSet.getInt("transfer_id"));
-        transfer.setAccount_to(rowSet.getInt("transfer_id"));
+        transfer.setAccount_from(rowSet.getInt("account_from"));
+        transfer.setAccount_to(rowSet.getInt("account_to"));
         transfer.setAmount(rowSet.getBigDecimal("amount"));
         transfer.setTransfer_status_id(rowSet.getInt("transfer_status_id"));
         transfer.setTransfer_type_id(rowSet.getInt("transfer_type_id"));
+        transfer.setTransfer_id(rowSet.getInt("transfer_id"));
         return transfer;
     }
 }

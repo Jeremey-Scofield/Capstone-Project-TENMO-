@@ -58,24 +58,81 @@ public class TransferController {
 //            6. I can't send more TE Bucks than I have in my account.
 //            7. I can't send a zero or negative amount.
 //            8. A Sending Transfer has an initial status of *Approved*.
+    //@RequestMapping(path = "/send", method = RequestMethod.PUT)
     public Transfer sendTEBucks(Transfer transfer){
-        BigDecimal localTransferAmount = transfer.getAmount();
-        Account localToAccount = accountDao.getAccountByAccountId(transfer.getAccount_to());
-        Account localFromAccount = accountDao.getAccountByAccountId(transfer.getAccount_from());
+       BigDecimal localTransferAmount = transfer.getAmount();
+       Account localToAccount = accountDao.getAccountByAccountId(transfer.getAccount_to());
+       Account localFromAccount = accountDao.getAccountByAccountId(transfer.getAccount_from());
+
+       transfer.setTransfer_status_id(2);
 
        if(!localToAccount.equals(localFromAccount) ){
            if (!(localTransferAmount.compareTo(BigDecimal.valueOf(0)) == 0 || localTransferAmount.compareTo(BigDecimal.valueOf(0)) == -1)){
                if (localTransferAmount.compareTo(localFromAccount.getBalance()) == -1) {
- ///   Create function                   accountDao.   localToAccount.setBalance(localToAccount.getBalance().add(localTransferAmount));
-                    localFromAccount.setBalance(localFromAccount.getBalance().subtract(localTransferAmount));
-                    transfer.setTransfer_status_id(2);
+                   localToAccount.setBalance(localToAccount.getBalance().add(localTransferAmount));
+                   accountDao.updateAccount(localToAccount);
+
+                   localFromAccount.setBalance(localFromAccount.getBalance().subtract(localTransferAmount));
+                   accountDao.updateAccount(localFromAccount);
                }
            }
+       }else {
+           transfer.setTransfer_status_id(3);
        }
-    return transferDao.getTransferById(transfer.getTransfer_id());
+
+       return transferDao.getTransferById(transfer.getTransfer_id());
     }
 
-    //Transfer receiveTEBucks(Transfer transfer);
+    //@RequestMapping(path = "/request", method = RequestMethod.PUT)
+    public Transfer requestTEBucks(Transfer transfer){
+        BigDecimal localTransferAmount = transfer.getAmount();
+        Account localToAccount = accountDao.getAccountByAccountId(transfer.getAccount_to());
+        Account localFromAccount = accountDao.getAccountByAccountId(transfer.getAccount_from());
+
+        transfer.setTransfer_status_id(1);
+
+        if(!localToAccount.equals(localFromAccount) ){
+            if (!(localTransferAmount.compareTo(BigDecimal.valueOf(0)) == 0 || localTransferAmount.compareTo(BigDecimal.valueOf(0)) == -1)){
+                if (localTransferAmount.compareTo(localFromAccount.getBalance()) == -1) {
+                    localToAccount.setBalance(localToAccount.getBalance().add(localTransferAmount));
+                    accountDao.updateAccount(localToAccount);
+
+                    localFromAccount.setBalance(localFromAccount.getBalance().subtract(localTransferAmount));
+                    accountDao.updateAccount(localFromAccount);
+
+                    transfer.setTransfer_status_id(2);
+                }
+            }
+        }else {
+            transfer.setTransfer_status_id(3);
+        }
+
+        return transferDao.getTransferById(transfer.getTransfer_id());
+    }
+
+//    I can't "approve" a given Request Transfer for more TE Bucks than I have in my account.
+//            2. The Request Transfer status is *Approved* if I approve, or *Rejected* if I reject the request.
+//            3. If the transfer is approved, the requester's account balance is increased by the amount of the request.
+//            4. If the transfer is approved, the requestee's account balance is decreased by the amount of the request.
+//            5. If the transfer is rejected, no account balance changes.
+    @RequestMapping(path = "/{id}", method = RequestMethod.PUT)
+    public Transfer approveOrReject(@PathVariable int id, boolean approvalCode, boolean sendOrReceive){
+        // approvalCode: true = approve, false = deny
+        // sendOrReceive: true = send, false = receive
+        Transfer localTransfer = transferDao.getTransferById(id);
+        Transfer returnedTransfer = null;
+        if (approvalCode && sendOrReceive){
+            returnedTransfer = sendTEBucks(localTransfer);
+
+        } else if (approvalCode && !sendOrReceive){
+            returnedTransfer = requestTEBucks(localTransfer);
+
+        } else {
+            localTransfer.setTransfer_status_id(3);
+        }
+
+        return returnedTransfer;
+    }
 
 
 

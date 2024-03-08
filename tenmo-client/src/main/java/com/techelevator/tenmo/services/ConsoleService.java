@@ -2,24 +2,56 @@ package com.techelevator.tenmo.services;
 
 
 import com.techelevator.tenmo.model.UserCredentials;
+import com.techelevator.util.BasicLogger;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class ConsoleService {
+    private static final String API_BASE_URL = "http://localhost:8080/";
+    private final RestTemplate restTemplate = new RestTemplate();
 
+    private String authToken = null;
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
     private final Scanner scanner = new Scanner(System.in);
 
     public int promptForMenuSelection(String prompt) {
-        int menuSelection;
+        int menuSelection =-1;
         System.out.print(prompt);
         try {
             menuSelection = Integer.parseInt(scanner.nextLine());
+            while (menuSelection != 0) {
+
+                if (menuSelection == 1) {
+                    handleCurrentBalance();
+                } else if (menuSelection == 2) {
+                    handleAllTransfers();
+                } else if (menuSelection == 3) {
+                    handlePendingTransfers();
+                } else if (menuSelection == 4) {
+                    handleSendTeBucks();
+                } else if (menuSelection == 5) {
+                    handleRequestTEBucks();
+                } else if (menuSelection == 0) {
+                    continue;
+                } else {
+                    // anything else is not valid
+                    System.out.println("Invalid Selection");
+                }
+            }
         } catch (NumberFormatException e) {
             menuSelection = -1;
         }
         return menuSelection;
     }
+
+
 
     public void printGreeting() {
         System.out.println("*********************");
@@ -87,5 +119,26 @@ public class ConsoleService {
     public void printErrorMessage() {
         System.out.println("An error occurred. Check the log for details.");
     }
+
+
+
+    public void  handleCurrentBalance() {
+        Reservation returnedReservation = null;
+        try {
+            returnedReservation = restTemplate.postForObject(API_BASE_URL + "reservations",
+                    makeReservationEntity(newReservation), Reservation.class);
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        }
+        return returnedReservation;
+    }
+    public void handleAllTransfers(){}
+
+
+    public void handlePendingTransfers(){}
+
+    public void handleSendTeBucks(){}
+
+    public void handleRequestTEBucks(){}
 
 }

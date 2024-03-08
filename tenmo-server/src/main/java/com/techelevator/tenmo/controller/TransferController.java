@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -33,14 +34,31 @@ public class TransferController {
         this.transferDao = transferDao;
     }
 
-    //exclude self from list
+    @RequestMapping(path = "/users", method = RequestMethod.GET)
     public List<User> getListOfUsers(Principal principal){
-        return null;
-    }
+        List<User> returnedList = null;
+        List<User> existingList = new ArrayList<>();
+        int myId = getCurrentUserId(principal);
+        try{
+            existingList = transferDao.getListOfUsers();
+            if(existingList != null){
+                for(User user:existingList) {
+                    if(user.getId() != myId){
+                        returnedList.add(user);
+                    }
 
+                }
+            }
+        } catch (DaoException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return returnedList;
+    }
+    @RequestMapping(path = "/pending", method = RequestMethod.GET)
     public List<Transfer> getPendingTransfers(Principal principal){
         try {
-            return transferDao.getPendingTransfers(loggedinUserID);
+            return transferDao.pendingTransfers(getCurrentUserId(principal));
         } catch (DaoException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -179,7 +197,9 @@ public class TransferController {
         }
     }
 */
-
+private int getCurrentUserId(Principal principal) {
+    return userDao.getUserByUsername(principal.getName()).getId();
+}
 
 
 }

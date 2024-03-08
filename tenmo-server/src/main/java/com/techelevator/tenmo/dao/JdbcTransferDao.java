@@ -4,6 +4,7 @@ package com.techelevator.tenmo.dao;
 import com.techelevator.tenmo.exception.DaoException;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.User;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,6 +35,7 @@ public class JdbcTransferDao implements TransferDao {
         }
         return allTransfers;
     }
+
 
 
     @Override
@@ -108,7 +110,7 @@ public class JdbcTransferDao implements TransferDao {
 
     //int approveTransferRequest(int transfer_id);
     @Override
-    public List<Transfer> pendingTransfers() {
+    public List<Transfer> pendingTransfers(int userId) {
         List<Transfer> pendingTransfers = new ArrayList<>();
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM public.transfer WHERE transfer_status_id = 1;";
         try {
@@ -122,6 +124,21 @@ public class JdbcTransferDao implements TransferDao {
         }
         return pendingTransfers;
     }
+    @Override
+    public List<User> getListOfUsers(){
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT user_id, username, password_hash, role FROM public.tenmo_user;";
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
+            while (results.next()) {
+                User localUser = mapRowToUser(results);
+                userList.add(localUser);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        }
+        return userList;
+    }
 
     private Transfer mapRowToTransfer(SqlRowSet rowSet){
         Transfer transfer = new Transfer();
@@ -132,5 +149,15 @@ public class JdbcTransferDao implements TransferDao {
         transfer.setTransfer_type_id(rowSet.getInt("transfer_type_id"));
         transfer.setTransfer_id(rowSet.getInt("transfer_id"));
         return transfer;
+    }
+
+    private User mapRowToUser(SqlRowSet rowSet) {
+        User user = new User();
+        user.setId(rowSet.getInt("user_id"));
+        user.setUsername(rowSet.getString("username"));
+        user.setPassword(rowSet.getString("password_hash"));
+        user.setAuthorities(rowSet.getString("role"));
+
+        return user;
     }
 }

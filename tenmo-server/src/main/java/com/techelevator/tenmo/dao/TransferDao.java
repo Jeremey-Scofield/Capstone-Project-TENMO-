@@ -5,6 +5,7 @@ package com.techelevator.tenmo.dao;
 
 
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.User;
 
 import java.lang.annotation.Target;
 import java.util.List;
@@ -28,7 +29,10 @@ public interface TransferDao {
 
     //int approveTransferRequest(int transfer_id);
 
-    List<Transfer> pendingTransfers();
+
+     List<Transfer> pendingTransfers(int userId);
+     List<User> getListOfUsers();
+
 
 
 

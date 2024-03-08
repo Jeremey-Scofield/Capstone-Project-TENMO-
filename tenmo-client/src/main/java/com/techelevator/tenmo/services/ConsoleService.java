@@ -1,19 +1,27 @@
 package com.techelevator.tenmo.services;
 
 
+import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.util.BasicLogger;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.Scanner;
-
+import com.techelevator.tenmo.model.AuthenticatedUser;
 public class ConsoleService {
     private static final String API_BASE_URL = "http://localhost:8080/";
     private final RestTemplate restTemplate = new RestTemplate();
 
+    private AuthenticatedUser localUser;
     private String authToken = null;
 
     public void setAuthToken(String authToken) {
@@ -123,15 +131,23 @@ public class ConsoleService {
 
 
     public void  handleCurrentBalance() {
-        Reservation returnedReservation = null;
+        BigDecimal currentBalance;
+        Account localAccount = null;
         try {
-            returnedReservation = restTemplate.postForObject(API_BASE_URL + "reservations",
-                    makeReservationEntity(newReservation), Reservation.class);
+            ResponseEntity<Account> response = restTemplate.exchange(API_BASE_URL + "/account",
+                    HttpMethod.GET, makeAuthEntity() , Account.class, );
+            localAccount = response.getBody();
+            currentBalance = localAccount.getBalance();
+            System.out.println("Account Balance for Logged in User: " + currentBalance);
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
         }
-        return returnedReservation;
+
     }
+
+
+
+
     public void handleAllTransfers(){}
 
 
@@ -140,5 +156,12 @@ public class ConsoleService {
     public void handleSendTeBucks(){}
 
     public void handleRequestTEBucks(){}
+
+
+    private HttpEntity<Void> makeAuthEntity() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(authToken);
+        return new HttpEntity<>(headers);
+    }
 
 }
